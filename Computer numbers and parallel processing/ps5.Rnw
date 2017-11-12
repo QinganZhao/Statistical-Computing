@@ -1,0 +1,223 @@
+\documentclass{article}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry} 
+\geometry{letterpaper} 
+\title{Stat243: Problem Set 5}
+\date{17 Oct. 2017} 
+\author{Qingan Zhao \\ SID: 3033030808}
+
+\begin{document}
+\maketitle
+\renewcommand\thesection{Problem \arabic{section}}
+\renewcommand\thesubsection{(\alph{subsection})}
+
+<<setup, include=FALSE>>=
+library(knitr)
+library(pryr)
+library(data.table)
+@
+
+\section{}
+This is the reading assignment.
+
+\section{}
+First, let's convert $1,\ 2,\ 3,\ ...,\ 2^{53}-2,\ 2^{53}-1$ to binary. Then demonstrate all these numbers into the format of $(-1)^S\times 1.d\times 2^{e-1023}$. Apparently $S$ is always $0$, so let's just determine $d$ and $e$ for each number. The results are shown in the table below:
+
+\begin{table}[!htbp]
+\centering
+\caption{Number 1 to $2^{53}-1$}
+\begin{tabular}{ccccc}
+\hline
+Decimal & Binary & $(-1)^S\times 1.d\times 2^{e-1023}$ & d & e\\
+\hline
+1 & 1 & $(-1)^0\times 1.0\times 2^0$ & 0 & 1023\\
+2 & 10 & $(-1)^0\times 1.0\times 2^1$ & 0 & 1024\\
+3 & 11 & $(-1)^0\times 1.1\times 2^1$ & 1 & 1024\\
+4 & 100 & $(-1)^0\times 1.00\times 2^2$ & 00 & 1025\\
+5 & 101 & $(-1)^0\times 1.01\times 2^2$ & 01 & 1025\\
+$\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ & $\cdots$\\
+$2^{53}-2$ & $\underbrace{1...1}_{52}0$ & $(-1)^0\times 1.\underbrace{1...1}_{51}0\times 2^{52}$ & $\underbrace{1...1}_{51}0$ & 1075\\
+$2^{53}-1$ & $\underbrace{1...1}_{53}$ & $(-1)^0\times 1.\underbrace{1...1}_{52}\times 2^{52}$ & $\underbrace{1...1}_{52}$ & 1075\\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent Hence, from the table we know that number 1 to $2^{53}-1$ can be represented exactly. Now let's consider larger numbers. $2^{53}-1$ can be written as $(-1)^0\times 1.\underbrace{0...0}_{53}\times 2^{53}$. However, we know that $d$ is represented as 52 bits. Luckily $\underbrace{0...0}_{53}$ is the same as 0, so 0 can be restored as $d$ for $2^{53}$. Similarly, $2^{53}+2$ can be witten as $(-1)^0\times 1.\underbrace{0...0}_{52}10\times 2^{53}$ and $d$ can be $\underbrace{0...0}_{52}1$ instead of $\underbrace{0...0}_{52}10$. For $2^{53}+1$, however, it can only be wriiten as $(-1)^0\times 1.\underbrace{0...0}_{52}1\times 2^{53}$, which means $d$ can only be $\underbrace{0...0}_{52}1$, so $d$ is overflowed. Hence, $2^{53}+1$ cannot be represented exactly, and the spacing of numbers of this magnitude is 2.\\\\
+
+\noindent Similarly, for numbers starting with $2^{54}$, we know that $2^{54}$ can be written as $(-1)^0\times 1.\underbrace{0...0}_{54}\times 2^{54}$ and $2^{54}+4$ can be written as $(-1)^0\times 1.\underbrace{0...0}_{51}100\times 2^{54}$. So for these two numbers, d is no greater than 52 bits (i.e., 0 and $\underbrace{0...0}_{51}1$). However, for $2^{54}+1$, $2^{54}+2$, and $2^{54}+3$, d can only be greater than 52 bits (not enough zeros at the end of $d$). Hence, the spacing of numbers of this magnitude is 4.\\
+
+\noindent Finally, let's confirm it in R.
+
+<<r-chunk2a, compile-R>>=
+#execute 2^53-1, 2^53, and 2^53+1
+bits(2^53 - 1)
+bits(2^53)
+bits(2^53 + 1)
+@
+
+\noindent We can see that the result of $2^{53}+1$ is the same as $2^{53}$, which means $2^{53}+1$ is not represented exactly.
+
+\section{}
+\subsection{}
+Let's create a large vector of integers and convert the vector to numeric type. Calculate and compare the time of copying the integer vector and the numeric vector.
+
+<<r-chunk3a, compile-R>>=
+#set the vector large enough (10^8 numbers)
+n <- 1e8
+int <- 1:n
+num <- as.numeric(int)
+#calculate the time of copying the integer vector and the numeric vector
+system.time(copy(int))
+system.time(copy(num))
+@
+
+\noindent As seen in the results, copying a integer vector is faster than a numeric vector of the same length in R. It is quite straightforward because a numric vector basically uses twice as much memory as a integer vector.
+
+\subsection{}
+Let's calculate and compare the time of taking the subset of half size from each vector.
+
+<<r-chunk3b, compile-R>>=
+#calcuate the time of taking the subset of size n/2 from each vector.
+system.time(int[1:(n/2)])
+system.time(num[1:(n/2)])
+@
+
+\noindent As seen in the results, taking a subset of half size from the integer vector is also faster than from the numeric vector, but not so much. 
+
+\section{}
+\subsection{}
+Breaking up $Y$ into $n$ individual column means that we let $p$ be $n$. Given that $n$ is very large, there will be too many tasks for the parallelization, and the communication overhead of starting and stopping those tasks will reduce the efficiency. Hence, it is better to break up $Y$ into resonable $p$ blocks of $m=n/p$ columns, which means $p$ should not be too large or too small. The key is to keep the parallelization load-balanced without too much communication.
+
+\subsection{}
+First let's compare the two approaches in terms of memory usage. Assume that 1 unit of memory is used when storing a single number.\\
+
+\noindent \textbf{Approach A:}\\
+
+\noindent For a single task, the units of memory used for storing the input matrix $X$ and submatrix of $Y$ should be:
+
+\begin{equation}
+n\times n+n\times m=n^2+mn
+\end{equation}
+
+\noindent During the multiplication process, the units of memory used for storing the results of multiplications of every two numbers should be:
+
+\begin{equation}
+n\times n\times m=mn^2
+\end{equation}
+
+\noindent The units of memory used for storing the output matrix should be:
+
+\begin{equation}
+n\times m=mn
+\end{equation}
+
+\noindent Hence, for a single task, all units of memory used should be:
+
+\begin{equation}
+n^2+mn+mn^2+mn=n^2+2mn+mn^2
+\end{equation}
+
+\noindent The total number of tasks is $n/m$, so the total units of memory used in Approach A should be:
+
+\begin{equation}
+(n^2+2mn+mn^2)\times \frac{n}{m}=n^3+2n^2+\frac{n^3}{m}
+\end{equation}
+
+\noindent \textbf{Approach B:}\\
+
+\noindent For a single task, the units of memory used for storing the input submatrix of $X$ and submatrix of $Y$ should be:
+
+\begin{equation}
+2\times m\times n=2mn
+\end{equation}
+
+\noindent During the multiplication process, the units of memory used for storing the results of multiplications of every two numbers should be:
+
+\begin{equation}
+n\times m\times m=m^2n
+\end{equation}
+
+\noindent The units of memory used for storing the output matrix should be:
+
+\begin{equation}
+m\times m=m^2
+\end{equation}
+
+\noindent Hence, for a single task, all units of memory used should be $2mn+m^2n+m^2$.\\
+
+\noindent The total number of tasks is $(n/m)^2$, so the total units of memory used in Approach B should be:
+
+\begin{equation}
+(2mn+m^2n+m^2)\times \left(\frac{n}{m}\right)^2=n^3+n^2+\frac{2n^3}{m}
+\end{equation}
+
+\noindent Now let's compare the two approachs (Equation(5)-Equation(9)):
+
+\begin{equation}
+(n^3+2n^2+\frac{n^3}{m})-(n^3+n^2+\frac{2n^3}{m})=n^2\left(1-\frac{n}{m}\right)<0\ \ (n>m)
+\end{equation}
+
+\noindent \textbf{Hence, Approach A is better for minimizing memory use.}\\\\
+
+\noindent Second, let's compare the two approaches in terms of communication.\\
+
+\noindent \textbf{Approach A:}\\
+
+\noindent For a single task, the total number of numbers that passed to the workers should be:
+
+\begin{equation}
+n\times n+n\times m=n^2+mn
+\end{equation}
+
+\noindent The number of numbers that passed back is $mn$, so the communication cost per task should be:
+
+\begin{equation}
+n^2+mn+mn=n^2+2mn
+\end{equation}
+
+\noindent Then the total communication cost in Approach A should be:
+
+\begin{equation}
+(n^2+2mn)\times\left(\frac{n}{m}\right)=2n^2+\frac{n^3}{m}
+\end{equation}
+
+\noindent \textbf{Approach B:}\\
+
+\noindent For a single task, the total number of numbers that passed to the workers should be:
+
+\begin{equation}
+n\times m\times 2=2mn
+\end{equation}
+
+\noindent The number of numbers that passed back is $m^2$, so the communication cost per task should be $2mn+m^2$.\\
+
+\noindent Then the total communication cost in Approach B should be:
+
+\begin{equation}
+(2mn+m^2)\times\left(\frac{n}{m}\right)^2=n^2+\frac{2n^3}{m}
+\end{equation}
+
+\noindent Now let's compare the two approachs (Equation(13)-Equation(15)):
+
+\begin{equation}
+(2n^2+\frac{n^3}{m})-(n^2+\frac{2n^3}{m})=n^2\left(1-\frac{n}{m}\right)<0\ \ (n>m)
+\end{equation}
+
+\noindent \textbf{Hence, Approach A is better for minimizing communication.}
+
+\section{}
+To solve this problem, we can look back at Problem 2. We know that numbers are stored as $S$, $d$, and $e$ in R. $S$ and $e$ are easy to describe exactly for all numbers, but the real problem is $d$. For 0.2, the actual digit of $d$ is infinite so R has to round it to 52 digits. Hence, the actual value of 0.2 in R is not exactly 0.2. Similarly, the actual value of 0.3 in R is not exactly 0.3 either. Nor are 0.1, 0.01 and 0.49. However, for 0.5, $d$ equals 0 instead of infinite numbers, so R does not have to round it. Hence, the actual value of 0.5 in R is exactly 0.5.\\
+
+\noindent Hence, it makes sense that $0.3==0.2+0.1$ is FALSE in R because they are not the exact value in R. But why $0.2+0.3==0.5$ and $0.01+0.49==0.5$ are TRUE in R? Now let's find out the exact values of these numbers in R.
+
+<<r-chunk5, compile-R>>=
+options(digits=22)
+0.2
+0.3
+0.01
+0.49
+0.1
+@
+
+\noindent As seen from the result, we know that $0.2+0.3==0.5$ and $0.01+0.49==0.5$ are TRUE in R because the ``error" are canceled when they are added together. In other words, the actual value of 0.2 in R plus the actual value of 0.3 in R equals the actual value of 0.5 in R. However, the actual value of 0.2 in R plus the actual value of 0.1 in R is not equal to the actual value of 0.3 in R, so $0.3==0.2+0.1$ is FALSE in R.
+
+\end{document}

@@ -1,0 +1,84 @@
+########## PS1 ##########
+
+##### Problem 1 is the class survey #####
+
+##### Problem 2(a) #####
+
+# Download the file via URL as temp
+$ wget -O temp "http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter=itemCode:526&DataMartId=FAO&Format=csv&c=2,3,4,5,6,7&s=countryName:asc,elementCode:asc,year:desc" 
+
+# Because we don't know the format of the file, we use "file" to get the format
+$ file temp
+
+# It's a .zip file, so we unzip it as apricots_data.csv
+$ unzip -c temp > apricots_data.csv
+
+# Extract the data for countries into countries_data.csv
+$ grep -v + apricots_data.csv > countries_data.csv
+
+# Extract the data for regions into regions_data.csv. Here we keep the information line
+$ grep 'Country or Area' apricots_data.csv > regions_data.csv
+$ grep + apricots_data.csv >> regions_data.csv
+
+# Extract the data of 2005 into countries_2005.csv. We know "2005" is in the 4th column. Also keep the information line
+$ grep 'Country or Area' apricots_data.csv > countries_2005.csv
+$ grep '^".*",".*",".*","2005"' countries_data.csv >> countries_2005.csv
+
+# Extract the "Area Harvested" in the 3rd column. Delete all the quotation marks and replace the commas in names with dashes so that we can sort data correctly. Then sort by column 6 in decreasing order and print the top 5 countries
+$ grep '^".*",".*","Area Harvested"' countries_2005.csv | sed 's/"//g' | sed 's/, /-/g' | sort -n -t ',' -k6 -r | cut -d ',' -f1 | head -n5  
+
+# Use a for-loop to examine top 5 in those years. It turns out that rankings really changed
+$ years=(1965 1975 1985 1995 2005)
+$ for i in ${years[@]}
+	do
+		grep "^\".*\",\".*\",\".*\",\"$i\"" countries_data.csv > countries_$i.csv
+		echo Top five countries for $i:
+		grep '^".*",".*","Area Harvested"' countries_$i.csv | sed 's/"//g' | sed 's/, /-/g' | sort -n -t ',' -k6 -r | cut -d ',' -f1 | head -n5
+		echo
+	done
+
+##### Problem 2(b) #####
+
+# This function intends to print out the data when input a single item code. It downloads and unzips the data via URL which corresponds the input code. Note that we here use "less" to avoid too many lines printed on the screen 
+$ function myfun()
+	{
+	wget -O $1 "http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter=itemCode:$1&DataMartId=FAO&Format=csv&c=2,3,4,5,6,7&s=countryName:asc,elementCode:asc,year:desc"
+  	unzip -c $1 > $1.csv
+	less $1.csv
+  	}
+
+##### Problem 3 #####
+
+# Download the .html file via URL
+$ wget http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/
+
+# From the .html file, we find that the filenames are just between two quotation marks which is easy to extract. We just use the quotation marks to separate columns and extract the name by extracting the 8th column
+$ filename=$(grep 'txt' index.html | cut -d '"' -f8)
+$ for i in $filename
+	do
+		echo downloading "$i.txt"		
+		wget http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/$i
+	done
+
+##### Problem 4 #####
+
+---
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+a <- start(LakeHuron)[1]
+b <- end(LakeHuron)[1]
+```
+The height of the water level in Lake Huron fluctuates over time. Here I 'analyze' the variation using R. I show a histogram of the lake levels for the period `r a` to `r b`.
+
+&nbsp;
+```{r plot, fig.width = 4, fig.height=5}
+hist(LakeHuron)
+```
+
+&nbsp;
+```{r chunk}
+lowHi <- c(which.min(LakeHuron), which.max(LakeHuron))
+yearExtrema <- attributes(LakeHuron) $tsp[1]-1 + lowHi
+```

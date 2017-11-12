@@ -1,0 +1,20 @@
+---
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+a <- start(LakeHuron)[1]
+b <- end(LakeHuron)[1]
+```
+The height of the water level in Lake Huron fluctuates over time. Here I 'analyze' the variation using R. I show a histogram of the lake levels for the period `r a` to `r b`.
+
+&nbsp;
+```{r plot, fig.width = 4, fig.height=5}
+hist(LakeHuron)
+```
+
+&nbsp;
+```{r chunk}
+lowHi <- c(which.min(LakeHuron), which.max(LakeHuron))
+yearExtrema <- attributes(LakeHuron) $tsp[1]-1 + lowHi
+```
