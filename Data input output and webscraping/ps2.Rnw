@@ -2,8 +2,8 @@
 \usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
 \usepackage{hyperref}
 \geometry{letterpaper} 
-\title{Stat243: Problem Set 4}
-\date{11 Oct. 2017} 
+\title{Stat243: Problem Set 2}
+\date{17 Sep. 2017} 
 \author{Qingan Zhao \\ SID: 3033030808}
 
 \begin{document}
