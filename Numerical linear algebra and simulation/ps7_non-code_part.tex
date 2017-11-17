@@ -1,0 +1,171 @@
+\documentclass[12pt]{article}
+
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry} 
+\usepackage{graphicx}
+\usepackage{amssymb,amsmath}
+\geometry{letterpaper}
+\linespread{1.1}
+  
+
+\title{Stat243: Problem Set 7 Non-Rcode Part}
+\date{17 Nov. 2017} 
+\author{Qingan Zhao \\ (SID: 3033030808)}
+\begin{document}
+
+\maketitle
+\renewcommand\thesection{Problem \arabic{section}}
+\renewcommand\thesubsection{(\alph{subsection})}
+
+\section{}
+
+I think we could first compute the standard deviation of the 1000 estimated coefficient, and then compute the mean of the 1000 estimated standard error. If \textbf{the standard deviation of the 1000 estimated coefficient is close enough to the mean of the 1000 estimated standard error}, then we could determine that the standard error properly characterizes the uncertainty of the estimated coefficient.
+
+\section{}
+
+\begin{equation*}
+\begin{split}
+||A||_2&=\mathop{sup}\limits_{z:||z||_2=1}\sqrt{(Az)^TAz}\\
+&=sup\sqrt{(\Gamma\Lambda\Gamma^Tz)^T(\Gamma\Lambda\Gamma^Tz)}\\
+&=sup\sqrt{(z^T\Gamma\Lambda\Gamma^T)(\Gamma\Lambda\Gamma^Tz)}\\
+&=sup\sqrt{z^T\Gamma\Lambda^2\Gamma^Tz}
+\end{split}
+\end{equation*}
+
+\noindent Set $y=\Gamma^Tz$:
+
+\begin{equation*}
+\begin{split}
+||A||_2&=sup\sqrt{z^T\Gamma\Lambda^2\Gamma^Tz}\\
+&=sup\sqrt{y^T\Lambda^2y}\\
+&=sup\sqrt{\Sigma y_i^2\times\lambda_i^2}
+\end{split}
+\end{equation*}
+
+\noindent Since $\Gamma$ is orthogonal, $\Gamma^T\Gamma=I$, hence:
+
+\begin{equation*}
+\begin{split}
+||y||_2&=sup\sqrt{(\Gamma z)^T(\Gamma^Tz)}\\
+&=sup\sqrt{z^T\Gamma\Gamma^Tz}\\
+&=sup\sqrt{z^Tz}\\
+&=||z||_2\\
+&=1
+\end{split}
+\end{equation*}
+
+\noindent Known that $||y||_2=1$, the sum is just $\lambda_j^2\times 1+\Sigma_{i\neq j}\times 0$ for the $jth$ eigenvalue of $A$. Hence, the maximum of the sum is the largest of the squared eigenvalues, which means that $||A||_2$ is the largest of the absolute values of the eigenvalues $A$ as we take the square root of the sum.
+
+\section{}
+
+\subsection{}
+
+The singular value decomposition (SVD) of $X$ is:
+
+\begin{equation*}
+X=UDV^T
+\end{equation*}
+
+\noindent where $U$, $V$ are orthogonal matrices and $D$ is a diagonal matrix. Hence, $X^TX$ can be expressed as:
+
+\begin{equation*}
+\begin{split}
+X^TX&=(UDV^T)^T(UDV^T)\\
+&=VD^TU^TUDV^T\\
+&=VD^TDV^T\\
+\end{split}
+\end{equation*}
+
+\noindent Since $D$ is a diagonal matrix, $D^TD$ is also a diagonal matrix with diagonal elements $d_{ii}^2$ (where $d_{ii}$ are diagonal elements of $D$). So the above equation is just the eigen decomposition of $X^TX$ with eigen values $d_{ii}^2$:
+
+\begin{equation*}
+(D^TD)V_i=d_{ii}^2V_i
+\end{equation*}
+
+\noindent Hence, the right singular vectors of $X$ (which is $V_{i}$) are the eigenvectors of $X^TX$, and the eigenvalues of $X^TX$  are the squares of the singular values of $X$. Given that $d_{ii}^2\ge 0$, all eigenvalues are non-negative, which means $X^TX$ is positive semi-definite.
+
+\subsection{} 
+
+Denote the eigenvalues of a matrix by $\lambda()$, and we have already known $\lambda(\Sigma)$. Then $\lambda(Z)$ is:
+
+\begin{equation*}
+\begin{split}
+\lambda(Z)&=\lambda(\Sigma+cI)\\
+&=\lambda(\Sigma)+c\lambda(I)\\
+&=\lambda(\Sigma)+c
+\end{split}
+\end{equation*}
+
+\noindent Since $\Sigma$ has exactly $n$ eigenvalues, adding $c$ to each eigenvalue would require exactly $n$ calculations (which is $O(n)$).
+
+\section{}
+
+\subsection{}
+
+The QR decomposition of $X$ is:
+
+\begin{equation*}
+X=QR
+\end{equation*}
+
+\noindent where $Q$ is an orthogonal matrix and $R$ is an upper triangular matrix.\\
+
+\noindent Then C can be expressed as:
+
+\begin{equation*}
+C=X^TX=(QR)^TQR=R^TQ^TQR=R^TR
+\end{equation*}
+
+\noindent $C^{-1}d$ can be expressed as:
+
+\begin{equation*}
+C^{-1}d=(R^TR)^{-1}(QR)^TY=R^{-1}(R^T)^{-1}R^TQ^TY=R^{-1}(Q^TY)
+\end{equation*}
+
+\noindent $AC^{-1}A^T$ can be expressed as:
+
+\begin{equation*}
+AC^{-1}A^T=AR^{-1}(R^T)^{-1}A^T=(AR^{-1})(AR^{-1})^{T}
+\end{equation*}
+
+\noindent Hence, $\hat{\beta}$ can be implemented as follows:
+
+(code)
+
+\subsection{}
+(code)
+
+\section{}
+
+\subsection{}
+
+The first stage requires computing $Z(Z^TZ)^{-1}Z^TX$ which is a 60 million $\times$ 60 million matrix. Since it may not be a sparse matrix even if $Z$ is sparse, the computer would run out of memory when storing it. $\hat{X}$ is also too large (60 million $\times$ 600) for ordinary PC to store. Same problems would occur in the second stage.
+
+\subsection{}
+
+First, let's just express $\hat{\beta}$ without using $\hat{X}$:
+
+\begin{equation*}
+\begin{split}
+\hat{\beta}&=[(Z(Z^TZ)^{-1}Z^TX)^TZ(Z^TZ)^{-1}Z^TX]^{-1}(Z(Z^TZ)^{-1}Z^TX)^Ty\\
+&=[X^TZ(Z^TZ)^{-1}Z^TX]^{-1}X^TZ(Z^TZ)^{-1}Z^Ty
+\end{split}
+\end{equation*}
+
+\noindent Now let's add some parentheses to make $\hat{\beta}$ computed on a computer without using a large amount of memory:
+
+\begin{equation*}
+\hat{\beta}=[(X^TZ)(Z^TZ)^{-1}(Z^TX)]^{-1}(X^TZ)(Z^TZ)^{-1}(Z^Ty)
+\end{equation*}
+
+\noindent Follow the step using the above equation, and $\hat{\beta}$ can be computed given that multiplications of sparse matrices can be done on the computer using the $spam$ package in R. Now let's prove it:\\
+
+\noindent First compute $X^TZ$, $(Z^TZ)^{-1}$, $Z^TX$, and $Z^Ty$. Their sizes are $600\times 630$, $630\times 630$, $630\times 630$, and $630\times 1$ which do not cost much memory.\\
+
+\noindent Second compute $[(X^TZ)(Z^TZ)^{-1}(Z^TX)]^{-1}$ of $600\times 600$ size which also does not cost much memory.\\
+
+\noindent Finally $\hat{\beta}$ (of $600\times 1$ size) can be computed by doing the multiplications of the above results.
+
+\section{}
+(code)
+
+\end{document}
