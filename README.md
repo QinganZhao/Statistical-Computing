@@ -1,3 +1,3 @@
-# Problem-sets-of-Statistical-Computing
+# Introduction-to-Statistical-Computing
 
-This project includes the problem sets of the course STAT 243 at UC Berkeley based on statistical programming and statistical computation, including programming principles, data and text manipulation, parallel processing, simulation, numerical linear algebra, optimization and so forth.
+This repository includes my solutions to the problem sets of STAT 243 at UC Berkeley. Topics are within R programming principles, data and text manipulation, parallel processing, big data tools, simulation, numerical linear algebra, optimization and so forth.
