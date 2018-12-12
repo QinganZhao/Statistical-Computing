@@ -1,0 +1,37 @@
+Data: Japan social survey 2010
+
+###variables
+outcome: SZINCOMA (personal annual income)
+
+###good predictors
+SEXA (gender)
+AGEB
+MARC (marital status)
+XJOBIWK (work status)
+XXLSTSCH (last school respondent attended)
+ST5LIFEY: Satisfaction with Family Life
+TP5LOC15: Place of Residence at Age 15: Size of Municipality
+PPLSTSCH: Last School Father Attended
+
+###“bad” predictors
+#########
+Note: they are not necessarily bad, just not theoretically/strongly/directly relevant
+#########
+JOINUNI (join labor union)
+PPLVTG (father living)
+DAY (date of interview, 1-31)
+FQSPORT (frequency of regularly practiced sports)
+DOSMOKEX (experience of smoking)
+BD3SAFTY: Opinions on Governments Expenditure on National Safety
+Q4NOPWR: View on Citizens Influence on Politics
+OPCO2EM: View on Policy: Reduction of CO2 Emission
+APPCCSXB: Desired Sex of Child
+Q4NOCCMG: View on Obligation to Have Children
+OPTEED: View on the Timing to Start English Education
+ST5HLTHY: Satisfaction with Health Condition
+DAYB: Date of Collection of Self-Administered Questionnaire: Day
+MONTH: Date of Interview: Month
+DORL: Practice Religion
+Q4DIVOK: View on Divorce
+OP4NAME: View on Change of Surname at Marriage
+WLACCORG: Acceptance of Organ Donation
